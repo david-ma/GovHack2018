@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>GovHack 18 - ATO</title>
+
+    <link rel="stylesheet" href="//cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/chart.css">
+
+
+    <style>
+        .chart path {
+            stroke-width: 0.1;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div class="blur_background">
+        <div class="mask"></div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12">
+                <h1>ATO Dashboard</h1>
+                <h2>Combines ABS data with ATO data</h2>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container page dataviz-page">
+    <section>
+
+        <div class="row" id="dataset">
+            <div class="col-xs-12 col-sm-6">
+                <h2>Hello</h2>
+                <p>Ipsum Lorem</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-xs-12" id="map">
+
+            </div>
+        </div>
+
+        <input type="textarea" id="lol">
+
+    </section>
+</div>
+
+<footer>
+    <div class="container">
+        <div class="row">
+            <p class="col-xs-6">Simple <a href="https://github.com/david-ma/Thalia">Thalia</a> Bootstrap Boilerplate</p>
+            <p class="col-xs-6 text-right">By <a href="https://twitter.com/frostickle">@Frostickle</a> <i class="fab fa-twitter" aria-hidden="true"></i></p>
+        </div>
+
+
+
+    </div>
+
+
+</footer>
+
+<script src="/js/vendor.min.js"></script>
+<script src="/js/topojson.js"></script>
+<!--<script src="/js/bootstrap.bundle.min.js"></script>-->
+
+<script src="/js/chart.js"></script>
+<script src="//cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+<script src="//cdn.rawgit.com/showdownjs/showdown/1.8.6/dist/showdown.min.js"></script>
+
+<script>
+    d3.tsv("/ato_data.tsv", function(d) {
+//        console.log(d);
+
+
+    }).then(function(data){
+
+        const map = new Chart({
+            element: "map",
+            data: data,
+            width: 1000,
+            height: 930,
+            nav: false,
+            margin: {
+                top: 10,
+                bottom: 10,
+                left: 10,
+                right: 10
+            }
+
+        }).scratchpad(function(c){
+            const svg = c.plot,
+                width = c.innerWidth,
+                height = c.innerHeight,
+                data = c.data;
+
+            const projection = d3.geoMercator()
+                .center([43, 34])
+                .clipExtent([[660,370],[780,480]]);
+
+            var path = d3.geoPath().projection(projection);
+            var graticule = d3.geoGraticule();
+
+            d3.json("/ABS_POA_2011.json")
+//            d3.json("/world.json")
+                .then(function(world){
+
+                    world = topojson.presimplify(world);
+
+                    const   container = svg.append('g'),
+                        minWeight = 0.001;
+
+                    const   geo = topojson.simplify(world, minWeight);
+                    const   postcodes = topojson.feature(geo, world.objects.ABS_POA_2011).features;
+//                    const   postcodes = topojson.feature(geo, world.objects.countries).features;
+
+                    // Position the map... this should actually be done in the next section, dynamically.
+                    const map = container
+                        .style("transform", "scale(8.2)")
+                        .append("g")
+                        .classed("world-map", true)
+                        .style("transform", "matrix(1, 0, 0, 1, -660, -370");
+//                        .attr("transform", "translate(-630,-350)");
+
+                    map.selectAll("path", ".postcode")
+                        .data(postcodes)
+                        .enter()
+                        .append("path")
+                        .attr("id", (d) => `map-${d.properties.POA_CODE}`)
+                        .attr("class", "postcode")
+                        .attr("d", path);
+
+                    map.append("path")
+                        .datum(graticule)
+                        .attr("class", "graticule")
+                        .attr("d", path);
+
+                    map.append("path")
+                        .datum({type: "Sphere"})
+                        .attr("class", "boundary")
+                        .attr("d", path);
+
+                    console.log("ok");
+                    return postcodes;
+                });
+
+        });
+
+
+    });
+
+</script>
+
+
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
